@@ -5,15 +5,15 @@ name: Accessibility Check (Self-Hosted)
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   accessibility-scan:
     name: ADA Self-Hosted Accessibility Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       # Checkout code
       - name: Checkout repository
@@ -23,8 +23,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       # Install dependencies
       - name: Install dependencies
@@ -40,7 +40,7 @@ jobs:
           npm start &
           echo "APPLICATION_PID=$!" >> $GITHUB_ENV
           echo "Started application server in background"
-          
+
           # Wait for application to be ready
           npx wait-on http://localhost:3000 --timeout 60000 || {
             echo "Application failed to start"
@@ -56,47 +56,46 @@ jobs:
         uses: ada-platform/github-actions@v2
         with:
           # Target URL - localhost automatically triggers self-hosted mode
-          server-url: 'http://localhost:3000'
-          
+          server-url: "http://localhost:3000"
+
           # API key for account validation and usage tracking
           # Even self-hosted mode needs this for account limits
           api-key: ${{ secrets.ADA_API_KEY }}
-          
+
           # Scanning configuration
-          scan-strategy: 'crawl'        # Options: single, crawl, sitemap, paths
-          scan-paths: |                 # Used with 'paths' strategy
+          scan-strategy: "crawl" # Options: single, crawl, sitemap, paths
+          scan-paths: | # Used with 'paths' strategy
             /
             /about
             /products
             /contact
-          max-pages: 20                 # Will be capped by account limits
-          
+          max-pages: 20 # Will be capped by account limits
           # Accessibility standards
-          wcag-level: 'AA'              # Options: A, AA, AAA
-          include-best-practices: true  # Include additional best practices
-          include-experimental: false   # Include experimental rules
-          
+          wcag-level: "AA" # Options: A, AA, AAA
+          include-best-practices: true # Include additional best practices
+          include-experimental: false # Include experimental rules
+
           # Thresholds and enforcement
-          threshold: 85                 # Minimum score to pass (0-100)
-          fail-on-violations: true      # Fail the action if below threshold
-          
+          threshold: 85 # Minimum score to pass (0-100)
+          fail-on-violations: true # Fail the action if below threshold
+
           # Reporting options
-          report-formats: 'json,html,markdown'
-          comment-pr: true              # Add results as PR comment
-          upload-artifacts: true        # Upload reports as artifacts
-          
+          report-formats: "json,html,markdown"
+          comment-pr: true # Add results as PR comment
+          upload-artifacts: true # Upload reports as artifacts
+
           # Advanced options
-          health-check-timeout: 30      # Seconds to wait for server
-          custom-headers: |             # Custom headers for authenticated routes
+          health-check-timeout: 30 # Seconds to wait for server
+          custom-headers: | # Custom headers for authenticated routes
             {
               "Authorization": "Bearer test-token",
               "X-Test-Mode": "true"
             }
-          
+
         env:
           # Optional: Force mode selection (normally auto-detected)
           # ADA_FORCE_MODE: 'self-hosted'
-          
+
           # Optional: Additional scanner configuration
           BROWSER_HEADLESS: true
           BROWSER_TIMEOUT: 30000
@@ -130,7 +129,7 @@ jobs:
           echo "Violations: ${{ steps.scan.outputs.violations-count }}"
           echo "Pages Scanned: ${{ steps.scan.outputs.pages-scanned }}"
           echo "Scan ID: ${{ steps.scan.outputs.scan-id }}"
-          
+
           if [ -f "ada-reports/accessibility-report.json" ]; then
             echo "### Top Violations:"
             jq '.summary.violationsBySeverity' ada-reports/accessibility-report.json
@@ -143,7 +142,7 @@ jobs:
     strategy:
       matrix:
         browser: [chromium, firefox, webkit]
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -158,10 +157,10 @@ jobs:
       - name: Run scan with ${{ matrix.browser }}
         uses: ada-platform/github-actions@v2
         with:
-          server-url: 'http://localhost:3000'
+          server-url: "http://localhost:3000"
           api-key: ${{ secrets.ADA_API_KEY }}
-          scan-strategy: 'single'
-          wcag-level: 'AA'
+          scan-strategy: "single"
+          wcag-level: "AA"
           threshold: 80
         env:
           SCANNER_BROWSER: ${{ matrix.browser }}
